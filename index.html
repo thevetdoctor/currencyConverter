@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" type="text/css" href="public/index.css">
+  <title>Currency Converter</title>
+</head>
+<body>
+  <div class="ui container">
+    <!-- Navigation Menu -->
+    <h3>Welcome to Currency Coverter App</h3>
+    Currency conversion made easy (online or offline)
+  </div>
+
+    <div id="currency">
+      <form id="form">
+
+        <div class="form">
+          <div class="form-div">
+            <label> Enter Amount</label>
+            <input id="amount" type="text" name="amount" value="50" placeholder="Enter Amount">
+          </div>
+          <div class="form-div">
+            <label>Convert from</label>
+                <select id="handle1" name="convertFrom" placeholder="Convert From ....">
+                  <option value="USD">United States Dollar</option>
+                  <option value="GBP">British Pound Sterling</option>
+                  <option value="EUR">European Euro
+                  <option value="NGN">Nigerian Naira</option>
+                </select>
+          </div>
+          <div class="form-div">
+            <label>Convert to</label>
+                <select id="handle2" name="convertTo" placeholder="Convert To ....">
+                  <option value="USD">United States Dollar</option>
+                  <option value="GBP">British Pound Sterling</option>
+                  <option value="EUR">European Euro
+                  <option value="NGN" selected>Nigerian Naira</option>
+                </select>
+          </div>
+          <div class="form-div">
+              <input id="convertBtn" type="submit" name="Convert">
+              <p id="convertedValue"></p>
+          </div>
+
+        </div>
+      </form>
+    </div>
+    <div id="img-div">
+      <img  id="target" src="../public/assets/logo.png">
+      <!-- <img  id="target" src="../assets/webtools.jpg"> -->
+    </div>
+  </div>
+
+  <script src="public/js/idb.js"></script>
+  <script src="public/js/app.js"></script>
+  <script src="public/js/converter.js"></script>
+</body>
+</html>
