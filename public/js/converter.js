@@ -205,9 +205,11 @@ Database.then((db) => {
   }
 });
 
-
+  
+  count = 0; //re-initialising count to zero
+  
   for(let factor of factorArray){
-
+    
     count++;
 
     for(let equiv_value in equiv_value_array){
