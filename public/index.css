@@ -1,0 +1,48 @@
+img {
+	width: 40vw;
+	height: 80vh;
+	border-radius: 5px;
+}
+
+#img-div {
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-around;
+	margin: 5vh 0px;
+}
+
+input, select {
+	margin: 5px;
+	padding: 3px;
+	border-radius: 5px;
+}
+
+#currency {
+	margin: 5vh 0px;
+}
+
+.form {
+	display: flex;
+	flex-flow: row wrap;
+}
+
+.form-div {
+	flex: 1 1 100%;
+}
+
+@media all and (max-width: 450px){
+
+#img-div {
+	display: flex;
+	flex-flow: column;
+	justify-content: center;
+	margin: 5vh 0px;
+  }
+
+  img {
+  	flex: 1 100%;
+  	width: 80vw;
+  	margin: auto;
+  }
+
+}
