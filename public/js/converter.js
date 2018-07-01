@@ -70,12 +70,12 @@ rates = rates.results;
 
 
 
-let count = 0;
+// let count = 0;
 let ratesArray = [];
 let currOptions = '';
 
 for(let rate in rates){
-  count++;
+  // count++;
 if(rates[rate]['currencySymbol'] === undefined){
   rates[rate]['currencySymbol'] = 'NA';
 }
@@ -93,7 +93,7 @@ currOptions += `<option id="${ rates[rate]['id'] }" value="${ rates[rate]['id'] 
 currFrom.innerHTML = currOptions;
 currTo.innerHTML = currOptions;
 
-console.log(count);
+// console.log(count);
 console.log(ratesArray);
 
 
@@ -151,11 +151,13 @@ console.log(factorArray.length);
 console.log(exchangeArray);
 
 
-let equiv, equiv_value_array = [], idFrom, idTo;
+let equiv, equiv_value_array = [], amountValue = 0, idFrom, idTo, currentRate;
 
 
 
 // declare the function to convert on clicking submit button
+
+let count = 0;
 
 const convert = (e) => {
 
@@ -193,6 +195,10 @@ Database.then((db) => {
 }).then((result) => {
   console.log(result);
 
+
+  if(equiv_value_array.length === 90){
+    return;
+  }
   for(let res of result){
     equiv_value_array.push(res);
 
@@ -202,30 +208,42 @@ Database.then((db) => {
 
   for(let factor of factorArray){
 
-    for(let equiv_value of equiv_value_array){
+    count++;
+
+    for(let equiv_value in equiv_value_array){
 
         if(equiv !== factor){
           continue;
 
         }
           console.log(equiv_value);
+
   }
  }
 
+amountValue = 0;
 
-amountValue = Number(amount.value) * equiv_value;
+amountValue = Number(amount.value);
+
+currentRate = equiv_value_array[count]['rate'];
+
+console.log(currentRate);
+
+amountValue *= currentRate;
 
 convertedValue.innerHTML = '';
 
 convertedValue.innerHTML = `<h3> ${currFrom.value} ${amount.value}  is equivalent to ${currTo.value} ${convertedValue.innerText} ${amountValue}</h3>`;
 
+
+count = 0;
 }
 
 else {
 
 convertedValue.innerHTML = '';
 
-convertedValue.innerHTML = `<h3> Please refresh the page and try again</h3>`;
+convertedValue.innerHTML = `<h3> ... Loading rates, please refresh the page and try again</h3>`;
 
    }
 }

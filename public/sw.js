@@ -1,5 +1,5 @@
 
-const cacheName = 'v0';
+const cacheName = 'v1';
 const cacheFiles = [
 		'./',
 		'./index.css',
