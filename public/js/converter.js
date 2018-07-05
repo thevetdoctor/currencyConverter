@@ -1,50 +1,9 @@
-// import idb from '../idb';
-
-// alert('Converter script is active!');
-
-let form = document.getElementById('form');
-
-function get(url){
-  return new Promise((resolve, reject) => {
-    let xhr = new XMLHttpRequest();
-
-    xhr.open('GET', url);
-
-    xhr.onload = () => {
-      if(xhr.status >= 200 && xhr.status < 300){
-        resolve(xhr.response, console.log('Resolved in converter.js'));
-      } else {
-        reject({status : `${this.status}: onload-failed in converter.js`,
-               statusText: xhr.statusText
-             }, console.log(`${this.status}: onload-failed`));
-      }
-    };
-
-    xhr.onerror = () => {
-
-      reject({status : `${xhr.status} =>@onerror-rejectedStatus`,
-               statusText: `${xhr.statusText}@onerror-rejectedStatusText`
-             }
-             );
-    };
-
-    xhr.send();
-
-  });
-}
-
-
-
-
 const Database = idb.open('ExchangeRates', 1, (upgradeDb) => {
 
-   const RateStore = upgradeDb.createObjectStore('rates', { keyPath: 'code'});
+   const RateStore = upgradeDb.createObjectStore('rates', { keyPath: 'rate'});
 
-  RateStore.createIndex('codeIndex', 'code');
+  RateStore.createIndex('matchIndex', 'match');
 });
-
-
-
 
 
 let rates = {"results":
@@ -59,30 +18,22 @@ let rates = {"results":
 "AED":{"currencyName":"UAE Dirham","currencySymbol":"Dirham","id":"AED"},
 "CNY":{"currencyName":"Chinese Yuan","currencySymbol":"¥","id":"CNY"},
 "ZAR":{"currencyName":"South African Rand","currencySymbol":"R","id":"ZAR"},
-}};
-
+  }
+};
 
 rates = rates.results;
 
-
-  let currFrom = document.getElementById('handle1');
-  let currTo = document.getElementById('handle2');
-
-
-
-// let count = 0;
+let currFrom = document.getElementById('handle1');
+let currTo = document.getElementById('handle2');
 let ratesArray = [];
 let currOptions = '';
 
 for(let rate in rates){
-  // count++;
 if(rates[rate]['currencySymbol'] === undefined){
   rates[rate]['currencySymbol'] = 'NA';
 }
 
   ratesArray.push(rate);
-
-
 
 // setting the options of the select element on the DOM
 
@@ -93,19 +44,14 @@ currOptions += `<option id="${ rates[rate]['id'] }" value="${ rates[rate]['id'] 
 currFrom.innerHTML = currOptions;
 currTo.innerHTML = currOptions;
 
-// console.log(count);
 console.log(ratesArray);
-
-
-
 
 const convertBtn = document.getElementById('convertBtn');
 const amount = document.getElementById('amount');
 const convertedValue = document.getElementById('convertedValue');
 
-
-
 let exchangeArray = [], exchangeRate, data, factor, factorArray = [];
+// let exchangeArray = [], exchangeRate, data, factor, factorArray = ['USD_AED', 'USD_GBP', 'USD_NGN'];
 
   for(let x of ratesArray) {
 
@@ -123,129 +69,128 @@ factorArray.push(factor);
 
 // initiate the ajax call to the API
 
+
  let url = 'https://free.currencyconverterapi.com/api/v5/convert?q=[CODE]&compact=ultra';
 
-  get(url.replace('[CODE]', factor), {mode : 'no-cors'})
-  .then((response) => {
-    let parsedResponse = JSON.parse(response);
+fetch(url.replace('[CODE]', factor)
+              // , {mode: 'no-cors', headers: {
+              // "Content-Type": "application/json; charset=utf-8",
+            // "Content-Type": "application/x-www-form-urlencoded",
+        // }}
+        )
 
-    console.log(parsedResponse[factor]);
-    exchangeRate = parsedResponse[factor];
+  .then((res) => {
+    if(res.status !== 200){
+      console.log('Status code: ' + res.status)
+      return;
+    }
+    res.json().then((data) => {
+      console.log(data);
+      exchangeArray.push(data);
 
-    data = { code: factor, rate: exchangeRate};
-    exchangeArray.push(data);
+       Database.then((db) => {
+          let createRecord = db.transaction('rates', 'readwrite');
+          let newRecord = createRecord.objectStore('rates');
 
+            for(let data of exchangeArray){
+
+              for(let x in data){
+
+                console.log(`match: ${x}, code: ${data[x]}`);
+
+                   newRecord.put({match: `${x}`,
+                                   rate: `${data[x]}`
+                                 });
+                    }
+                  }
+
+          createRecord.complete;
+        }).then(() => {
+          console.log('Record created');
+        });
+
+
+    })
  })
   .catch((err) => {
     console.log('Error : Conversion not successful', err);
-  });
+    });
 
   }
-
 }
-
 
 
 console.log(factorArray);
 console.log(factorArray.length);
 console.log(exchangeArray);
 
+// }
 
-let equiv, equiv_value_array = [], amountValue = 0, idFrom, idTo, currentRate;
 
-
+let equiv, equiv_match_array = [], equiv_value_array = [], amountValue = 0, idFrom, idTo, currentRate;
 
 // declare the function to convert on clicking submit button
 
 let count = 0;
 
 const convert = (e) => {
-
 e.preventDefault();
 
-
-if(factorArray.length === exchangeArray.length) {
-
-Database.then((db) => {
-  let createRecord = db.transaction('rates', 'readwrite');
-  let newRecord = createRecord.objectStore('rates');
-
-for(let data of exchangeArray){
-
-      newRecord.put(data);
-}
-
-  createRecord.complete;
-}).then(() => {
-  console.log('Record created');
-});
+  idFrom = currFrom.value;
+  idTo = currTo.value;
 
 
+        Database.then((db) => {
+          let readRecord = db.transaction('rates').objectStore('rates').index('matchIndex');
 
-  idFrom = `currFrom.attr['value']`;
-  idTo = `currTo.attr['value']`;
+          return readRecord.getAll();
+        }).then((result) => {
+          console.log(result);
+
+          if(result.length == 0){
+            for(let res of result){
+              equiv_match_array.push(res.match);
+              equiv_value_array.push(res);
+             }
+            }
+         });
+
+        if(idFrom == idTo){
+
+          amountValue = 1;
+
+          convertedValue.innerHTML = '';
+
+          convertedValue.innerHTML = `<h3> ${currFrom.value} ${amount.value}  is equivalent to ${currTo.value} ${convertedValue.innerText} ${amountValue}</h3>`;
+          return;
+        }
 
   equiv = idFrom + '_' + idTo;
 
+  if(equiv_match_array.length !== 0){
 
-Database.then((db) => {
-  let readRecord = db.transaction('rates').objectStore('rates').index('codeIndex');
+let a = equiv_match_array.indexOf(equiv);
+currentRate = equiv_value_array[a]['rate'];
 
-  return readRecord.getAll();
-}).then((result) => {
-  console.log(result);
-
-
-  if(equiv_value_array.length === 90){
-    return;
-  }
-  for(let res of result){
-    equiv_value_array.push(res);
-
-  }
-});
-
-
-  for(let factor of factorArray){
-
-    count++;
-
-    for(let equiv_value in equiv_value_array){
-
-        if(equiv !== factor){
-          continue;
-
-        }
-          console.log(equiv_value);
-
-  }
- }
-
-amountValue = 0;
-
-amountValue = Number(amount.value);
-
-currentRate = equiv_value_array[count]['rate'];
-
+console.log(a);
 console.log(currentRate);
 
+amountValue = Number(amount.value);
+console.log(currentRate);
 amountValue *= currentRate;
+
+amountValue = amountValue.toFixed(2);
 
 convertedValue.innerHTML = '';
 
 convertedValue.innerHTML = `<h3> ${currFrom.value} ${amount.value}  is equivalent to ${currTo.value} ${convertedValue.innerText} ${amountValue}</h3>`;
 
-
-count = 0;
-}
-
-else {
+}  else {
 
 convertedValue.innerHTML = '';
 
 convertedValue.innerHTML = `<h3> ... Loading rates, please refresh the page and try again</h3>`;
-
-   }
+     }
 }
 
 convertBtn.addEventListener('click', convert);
